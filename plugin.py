@@ -681,7 +681,7 @@ class Infobot(callbacks.PluginRegexp):
                 self.changed = True
             except dbi.NoRecordError:
                 pass
-        if changed:
+        if self.changed:
             self.confirm()
         else:
             self.missing(fact, irc=irc, msg=msg)
