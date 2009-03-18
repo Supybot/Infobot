@@ -167,5 +167,13 @@ class InfobotTestCase(ChannelPluginTestCase):
         self.assertSnarfNoResponse('hi')
         self.assertRegexp('hi', 'Hello')
 
+    def testChange(self):
+        self.assertSnarfNoResponse('hi is <reply>Hello, $who.')
+        self.assertNotRegexp('hi =~ s/Hello/Hola/', 'anything matching')
+
+    def testPunctuation(self):
+        self.assertSnarfNoResponse('test123 is <reply>Something with trailing '
+                                   'punctuation.')
+        self.assertRegexp('test123', r'punctuation\.')
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
