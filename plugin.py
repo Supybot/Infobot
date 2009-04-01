@@ -134,8 +134,7 @@ class PickleInfobotDB(object):
         self.flush()
 
     def incChanges(self):
-        filename = dynamic.filename
-        self.changes[filename] += 1
+        self.changes[dynamic.filename] += 1
 
     def incResponses(self):
         self.responses[dynamic.filename] += 1
@@ -286,7 +285,7 @@ class SqliteInfobotDB(object):
         self.changes[dynamic.filename] += 1
 
     def incResponses(self):
-        self.changes[dynamic.filename] += 1
+        self.responses[dynamic.filename] += 1
 
     def changeIs(self, channel, factoid, replacer):
         (db, filename) = self._getDb(channel)
