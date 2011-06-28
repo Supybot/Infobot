@@ -231,8 +231,7 @@ class PickleInfobotDB(object):
 
     def getFacts(self, channel, partial):
         ((Is, Are), _) = self._getDb(channel)
-        return '[' + ', '.join(Are.keys()) + '], [' + ', '.join(Is.keys()) + ']'
-
+        return utils.str.format('[%L], [%L]', Are.keys(), Is.keys())
 
 class SqliteInfobotDB(object):
     def __init__(self, filename):
@@ -243,7 +242,7 @@ class SqliteInfobotDB(object):
 
     def _getDb(self, channel):
         try:
-            import sqlite3 as sqlite
+            import sqlite
         except ImportError:
             raise callbacks.Error, 'You need to have PySQLite installed to '\
                                    'use this plugin.  Download it at '\
@@ -295,22 +294,22 @@ class SqliteInfobotDB(object):
     def changeIs(self, channel, factoid, replacer):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT value FROM isFacts WHERE key LIKE ?""",
-                       (factoid,))
-        if (len(cursor.fetchall()) == 0):
+        cursor.execute("""SELECT value FROM isFacts WHERE key LIKE %s""",
+                       factoid)
+        if cursor.rowcount == 0:
             raise dbi.NoRecordError
         old = cursor.fetchone()[0]
         if replacer is not None:
-            cursor.execute("""UPDATE isFacts SET value=? WHERE key LIKE ?""",
-                           (replacer(old), factoid))
+            cursor.execute("""UPDATE isFacts SET value=%s WHERE key LIKE %s""",
+                           replacer(old), factoid)
             db.commit()
             self.incChanges()
 
     def getIs(self, channel, factoid):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT value FROM isFacts WHERE key LIKE ?""",
-                       (factoid,))
+        cursor.execute("""SELECT value FROM isFacts WHERE key LIKE %s""",
+                       factoid)
         ret = cursor.fetchone()[0]
         self.incResponses()
         return ret
@@ -318,14 +317,14 @@ class SqliteInfobotDB(object):
     def setIs(self, channel, fact, oid):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""INSERT INTO isFacts VALUES (?, ?)""", (fact, oid))
+        cursor.execute("""INSERT INTO isFacts VALUES (%s, %s)""", fact, oid)
         db.commit()
         self.incChanges()
 
     def delIs(self, channel, factoid):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""DELETE FROM isFacts WHERE key LIKE ?""", (factoid,))
+        cursor.execute("""DELETE FROM isFacts WHERE key LIKE %s""", factoid)
         if cursor.rowcount == 0:
             raise dbi.NoRecordError
         db.commit()
@@ -334,28 +333,28 @@ class SqliteInfobotDB(object):
     def hasIs(self, channel, factoid):
         (db, _) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT * FROM isFacts WHERE key LIKE ?""", (factoid,))
-        return (len(cursor.fetchall()) == 1)
+        cursor.execute("""SELECT * FROM isFacts WHERE key LIKE %s""", factoid)
+        return cursor.rowcount == 1
 
     def changeAre(self, channel, factoid, replacer):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT value FROM areFacts WHERE key LIKE ?""",
-                       (factoid,))
-        if (len(cursor.fetchall()) == 0):
+        cursor.execute("""SELECT value FROM areFacts WHERE key LIKE %s""",
+                       factoid)
+        if cursor.rowcount == 0:
             raise dbi.NoRecordError
         old = cursor.fetchone()[0]
         if replacer is not None:
-            sql = """UPDATE areFacts SET value=? WHERE key LIKE ?"""
-            cursor.execute(sql, (replacer(old), factoid))
+            sql = """UPDATE areFacts SET value=%s WHERE key LIKE %s"""
+            cursor.execute(sql, replacer(old), factoid)
             db.commit()
             self.incChanges()
 
     def getAre(self, channel, factoid):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT value FROM areFacts WHERE key LIKE ?""",
-                       (factoid,))
+        cursor.execute("""SELECT value FROM areFacts WHERE key LIKE %s""",
+                       factoid)
         ret = cursor.fetchone()[0]
         self.incResponses()
         return ret
@@ -363,14 +362,14 @@ class SqliteInfobotDB(object):
     def setAre(self, channel, fact, oid):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""INSERT INTO areFacts VALUES (?, ?)""", (fact, oid))
+        cursor.execute("""INSERT INTO areFacts VALUES (%s, %s)""", fact, oid)
         db.commit()
         self.incChanges()
 
     def delAre(self, channel, factoid):
         (db, filename) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""DELETE FROM areFacts WHERE key LIKE ?""", (factoid,))
+        cursor.execute("""DELETE FROM areFacts WHERE key LIKE %s""", factoid)
         if cursor.rowcount == 0:
             raise dbi.NoRecordError
         db.commit()
@@ -379,8 +378,8 @@ class SqliteInfobotDB(object):
     def hasAre(self, channel, factoid):
         (db, _) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT * FROM areFacts WHERE key LIKE ?""", (factoid,))
-        return (len(cursor.fetchall()) == 1)
+        cursor.execute("""SELECT * FROM areFacts WHERE key LIKE %s""", factoid)
+        return cursor.rowcount == 1
 
     def getDunno(self):
         return utils.iter.choice(dunnos) + utils.iter.choice(ends)
@@ -413,14 +412,14 @@ class SqliteInfobotDB(object):
 
     def getFacts(self, channel, partial):
         (db, _) = self._getDb(channel)
-        areCursor = db.cursor()
-        isCursor = db.cursor()
+        cursor = db.cursor()
         key = partial or '%'
-        areCursor.execute("""SELECT key FROM areFacts WHERE key LIKE ?""",
-                (key,))
-        isCursor.execute("""SELECT key FROM isFacts WHERE key LIKE ?""", (key,))
-        return '[' + ', '.join([obj[0] for obj in areCursor.fetchall()]) + \
-                '], [' + ', '.join([obj[0] for obj in isCursor.fetchall()]) + ']'
+        cursor.execute("""SELECT key FROM areFacts WHERE key LIKE %s""", key)
+        areFacts = cursor.fetchall()
+        cursor.execute("""SELECT key FROM isFacts WHERE key LIKE %s""", key)
+        isFacts = cursor.fetchall()
+        return utils.str.format('[%L], [%L]', [fact[0] for fact in areFacts],
+                [fact[0] for fact in isFacts])
 
 
 InfobotDB = plugins.DB('Infobot',
@@ -786,7 +785,7 @@ class Infobot(callbacks.PluginRegexp):
             self.confirm()
 
     def listfacts(self, irc, msg, args, channel, partial):
-        """[<channel> <partial>]
+        """[<channel>] [<partial>]
 
         Returns the facts in the Infobot database matching <partial> (when
         using an sqlite database; returns all facts otherwise).
