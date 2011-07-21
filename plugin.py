@@ -28,6 +28,8 @@
 ###
 
 import os
+import string
+import fnmatch
 import re
 import time
 import cPickle as pickle
@@ -229,9 +231,12 @@ class PickleInfobotDB(object):
         ((Is, Are), _) = self._getDb(channel)
         return len(Are.keys()) + len(Is.keys())
 
-    def getFacts(self, channel, partial):
+    def getFacts(self, channel, glob):
         ((Is, Are), _) = self._getDb(channel)
-        return utils.str.format('[%L], [%L]', Are.keys(), Is.keys())
+        glob = glob.lower()
+        areFacts = [f for f in Are.keys() if fnmatch.fnmatch(f.lower(), glob)]
+        isFacts = [f for f in Is.keys() if fnmatch.fnmatch(f.lower(), glob)]
+        return utils.str.format('[%L], [%L]', areFacts, isFacts)
 
 class SqliteInfobotDB(object):
     def __init__(self, filename):
@@ -410,10 +415,11 @@ class SqliteInfobotDB(object):
         isFacts = int(cursor.fetchone()[0])
         return areFacts + isFacts
 
-    def getFacts(self, channel, partial):
+    _sqlTrans = string.maketrans('*?', '%_')
+    def getFacts(self, channel, glob):
         (db, _) = self._getDb(channel)
         cursor = db.cursor()
-        key = partial or '%'
+        key = glob.translate(self._sqlTrans)
         cursor.execute("""SELECT key FROM areFacts WHERE key LIKE %s""", key)
         areFacts = cursor.fetchall()
         cursor.execute("""SELECT key FROM isFacts WHERE key LIKE %s""", key)
@@ -784,15 +790,14 @@ class Infobot(callbacks.PluginRegexp):
         if msg.addressed:
             self.confirm()
 
-    def listfacts(self, irc, msg, args, channel, partial):
-        """[<channel>] [<partial>]
+    def listfacts(self, irc, msg, args, channel, glob):
+        """[<channel>] [<glob>]
 
-        Returns the facts in the Infobot database matching <partial> (when
-        using an sqlite database; returns all facts otherwise).
+        Returns the facts in the Infobot database matching <glob>.
         """
-        facts = self.db.getFacts(channel, partial)
+        facts = self.db.getFacts(channel, glob)
         irc.reply(facts)
-    listfacts = wrap(listfacts, ['channeldb', optional('text')])
+    listfacts = wrap(listfacts, ['channeldb', additional('glob', '*')])
 
     def stats(self, irc, msg, args, channel):
         """[<channel>]
