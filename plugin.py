@@ -28,6 +28,8 @@
 ###
 
 import os
+import string
+import fnmatch
 import re
 import time
 import cPickle as pickle
@@ -229,6 +231,13 @@ class PickleInfobotDB(object):
         ((Is, Are), _) = self._getDb(channel)
         return len(Are.keys()) + len(Is.keys())
 
+    def getFacts(self, channel, glob):
+        ((Is, Are), _) = self._getDb(channel)
+        glob = glob.lower()
+        areFacts = [f for f in Are.keys() if fnmatch.fnmatch(f.lower(), glob)]
+        isFacts = [f for f in Is.keys() if fnmatch.fnmatch(f.lower(), glob)]
+        return utils.str.format('[%L], [%L]', areFacts, isFacts)
+
 class SqliteInfobotDB(object):
     def __init__(self, filename):
         self.filename = filename
@@ -405,6 +414,18 @@ class SqliteInfobotDB(object):
         cursor.execute("""SELECT COUNT(*) FROM isFacts""")
         isFacts = int(cursor.fetchone()[0])
         return areFacts + isFacts
+
+    _sqlTrans = string.maketrans('*?', '%_')
+    def getFacts(self, channel, glob):
+        (db, _) = self._getDb(channel)
+        cursor = db.cursor()
+        key = glob.translate(self._sqlTrans)
+        cursor.execute("""SELECT key FROM areFacts WHERE key LIKE %s""", key)
+        areFacts = cursor.fetchall()
+        cursor.execute("""SELECT key FROM isFacts WHERE key LIKE %s""", key)
+        isFacts = cursor.fetchall()
+        return utils.str.format('[%L], [%L]', [fact[0] for fact in areFacts],
+                [fact[0] for fact in isFacts])
 
 
 InfobotDB = plugins.DB('Infobot',
@@ -768,6 +789,15 @@ class Infobot(callbacks.PluginRegexp):
             self.db.setAre(dynamic.channel, key, value)
         if msg.addressed:
             self.confirm()
+
+    def listfacts(self, irc, msg, args, channel, glob):
+        """[<channel>] [<glob>]
+
+        Returns the facts in the Infobot database matching <glob>.
+        """
+        facts = self.db.getFacts(channel, glob)
+        irc.reply(facts)
+    listfacts = wrap(listfacts, ['channeldb', additional('glob', '*')])
 
     def stats(self, irc, msg, args, channel):
         """[<channel>]
