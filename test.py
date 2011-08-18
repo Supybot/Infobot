@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2005, James Vega
+# Copyright (c) 2004-2005,2011, James Vega
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,8 @@ class InfobotTestCase(ChannelPluginTestCase):
             ibot.unaddressed.snarfDefinitions.setValue(True)
             ibot.unaddressed.answerQuestions.setValue(True)
             self.assertSnarfNoResponse('foo is at http://bar.com/', 2)
-            self.assertRegexp('infobot stats', '1 modification')
-            self.assertRegexp('infobot status', '1 modification')
+            self.assertRegexp('infobot stats', '\d modification')
+            self.assertRegexp('infobot status', '\d modification')
             self.assertSnarfRegexp('foo?', r'foo.*is.*http://bar.com/')
             self.assertSnarfNoResponse('foo is at http://baz.com/', 2)
             self.assertSnarfNotRegexp('foo?', 'baz')
@@ -161,6 +161,9 @@ class InfobotTestCase(ChannelPluginTestCase):
     def testPredefinedFactoids(self):
         self.assertSnarfNoResponse('what?', 3)
         self.assertRegexp('roses?', 'roses are red')
+
+    def testListFacts(self):
+        self.assertRegexp('listfacts rose', 'roses')
 
     def testAddressedQuestions(self):
         self.assertSnarfNoResponse('hi is <reply>Hello, $who.')

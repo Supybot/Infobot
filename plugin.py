@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2005,2009, James Vega
+# Copyright (c) 2004-2005,2009,2011, James Vega
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -234,9 +234,11 @@ class PickleInfobotDB(object):
     def getFacts(self, channel, glob):
         ((Is, Are), _) = self._getDb(channel)
         glob = glob.lower()
-        areFacts = [f for f in Are.keys() if fnmatch.fnmatch(f.lower(), glob)]
-        isFacts = [f for f in Is.keys() if fnmatch.fnmatch(f.lower(), glob)]
-        return utils.str.format('[%L], [%L]', areFacts, isFacts)
+        facts = [f for f in Are.keys()
+                 if fnmatch.fnmatch(f.lower(), glob)]
+        facts.extend([f for f in Is.keys()
+                      if fnmatch.fnmatch(f.lower(), glob)])
+        return set(facts)
 
 class SqliteInfobotDB(object):
     def __init__(self, filename):
@@ -421,11 +423,10 @@ class SqliteInfobotDB(object):
         cursor = db.cursor()
         key = glob.translate(self._sqlTrans)
         cursor.execute("""SELECT key FROM areFacts WHERE key LIKE %s""", key)
-        areFacts = cursor.fetchall()
+        facts = [fact[0] for fact in cursor.fetchall()]
         cursor.execute("""SELECT key FROM isFacts WHERE key LIKE %s""", key)
-        isFacts = cursor.fetchall()
-        return utils.str.format('[%L], [%L]', [fact[0] for fact in areFacts],
-                [fact[0] for fact in isFacts])
+        facts.extend([fact[0] for fact in cursor.fetchall()])
+        return set(facts)
 
 
 InfobotDB = plugins.DB('Infobot',
@@ -796,7 +797,7 @@ class Infobot(callbacks.PluginRegexp):
         Returns the facts in the Infobot database matching <glob>.
         """
         facts = self.db.getFacts(channel, glob)
-        irc.reply(facts)
+        irc.reply(utils.str.format('%L', list(facts)))
     listfacts = wrap(listfacts, ['channeldb', additional('glob', '*')])
 
     def stats(self, irc, msg, args, channel):
