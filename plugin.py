@@ -797,7 +797,10 @@ class Infobot(callbacks.PluginRegexp):
         Returns the facts in the Infobot database matching <glob>.
         """
         facts = self.db.getFacts(channel, glob)
-        irc.reply(utils.str.format('%L', list(facts)))
+        if not facts:
+            self.dunno(irc=irc, msg=msg)
+        else:
+            irc.reply(utils.str.format('%L', list(facts)))
     listfacts = wrap(listfacts, ['channeldb', additional('glob', '*')])
 
     def stats(self, irc, msg, args, channel):
