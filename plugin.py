@@ -623,8 +623,9 @@ class Infobot(callbacks.PluginRegexp):
             self.msg = None
 
     def doForget(self, irc, msg, match):
-        r'^forget\s+(.+?)[?!. ]*$'
+        r'^forget\s+(.+?[?!. ]*)$'
         fact = match.group(1)
+        fact = fact.rstrip()
         deleted = False
         for method in [self.db.delIs, self.db.delAre]:
             try:
