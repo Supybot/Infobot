@@ -439,7 +439,7 @@ class Dunno(Exception):
 class Infobot(callbacks.PluginRegexp):
     addressedRegexps = ['doForce', 'doForget', 'doChange', 'doFactoid',
                         'doUnknown']
-    unaddressedRegexps = ['doForce', 'doForget', 'doFactoid', 'doUnknown']
+    unaddressedRegexps = ['doFactoid', 'doUnknown']
     def __init__(self, irc):
         self.__parent = super(Infobot, self)
         self.__parent.__init__(irc)

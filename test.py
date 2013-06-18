@@ -130,6 +130,7 @@ class InfobotTestCase(ChannelPluginTestCase):
             ibot.unaddressed.snarfDefinitions.setValue(True)
             self.assertSnarfNoResponse('forums are good')
             self.assertSnarfRegexp('forums?', r'forums.*are.*good')
+            self.assertSnarfNoResponse('no, forums are evil')
             self.assertNotError('no, forums are evil')
             self.assertSnarfRegexp('forums?', r'forums.*.are.*evil')
         finally:
@@ -173,6 +174,7 @@ class InfobotTestCase(ChannelPluginTestCase):
     def testChange(self):
         self.assertSnarfNoResponse('hi is <reply>Hello, $who.')
         self.assertNotRegexp('hi =~ s/Hello/Hola/', 'anything matching')
+        self.assertSnarfNoResponse('hi =~ s/Hola/Foo/')
 
     def testPunctuation(self):
         self.assertSnarfNoResponse('test123 is <reply>Something with trailing '
