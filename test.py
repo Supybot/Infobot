@@ -178,5 +178,8 @@ class InfobotTestCase(ChannelPluginTestCase):
         self.assertSnarfNoResponse('test123 is <reply>Something with trailing '
                                    'punctuation.')
         self.assertRegexp('test123', r'punctuation\.')
+        self.assertSnarfNoResponse('foo. is <reply>Key with punctuation')
+        self.assertRegexp('foo.', r'Key with')
+        self.assertNotRegexp('forget foo.', r'I didn\'t have anything')
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
