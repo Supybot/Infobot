@@ -625,7 +625,7 @@ class Infobot(callbacks.PluginRegexp):
     def doForget(self, irc, msg, match):
         r'^forget\s+(.+?[?!. ]*)$'
         fact = match.group(1)
-        fact = fact.rstrip()
+        fact = fact.rstrip('?')
         deleted = False
         for method in [self.db.delIs, self.db.delAre]:
             try:
@@ -642,6 +642,7 @@ class Infobot(callbacks.PluginRegexp):
         r'^no,\s+(\w+,\s+)?(.+?)\s+(?<!\\)(was|is|am|were|are)\s+(.+?[?!. ]*)$'
         (nick, key, isAre, value) = match.groups()
         value = value.rstrip()
+        key.rstrip('?')
         if not msg.addressed:
             if nick is None:
                 self.log.debug('Not forcing because we weren\'t addressed and '
@@ -726,7 +727,7 @@ class Infobot(callbacks.PluginRegexp):
         (key, isAre, also, value) = match.groups()
         key = key.replace('\\', '')
         isAre = isAre.lower()
-        value = value.rstrip()
+        value = value.rstrip().rstrip('?')
         if isAre in ('was', 'is', 'am'):
             isAre = 'is'
         else:
