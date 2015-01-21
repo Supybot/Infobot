@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2005,2009,2011, James Vega
+# Copyright (c) 2004-2005,2009,2011,2015 James McCoy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -623,9 +623,9 @@ class Infobot(callbacks.PluginRegexp):
             self.msg = None
 
     def doForget(self, irc, msg, match):
-        r'^forget\s+(.+?[?!. ]*)$'
+        r'^forget\s+(.+?)$'
         fact = match.group(1)
-        fact = fact.rstrip('?')
+        fact = fact.rstrip()
         deleted = False
         for method in [self.db.delIs, self.db.delAre]:
             try:
@@ -642,7 +642,6 @@ class Infobot(callbacks.PluginRegexp):
         r'^no,\s+(\w+,\s+)?(.+?)\s+(?<!\\)(was|is|am|were|are)\s+(.+?[?!. ]*)$'
         (nick, key, isAre, value) = match.groups()
         value = value.rstrip()
-        key.rstrip('?')
         if not msg.addressed:
             if nick is None:
                 self.log.debug('Not forcing because we weren\'t addressed and '
@@ -725,7 +724,7 @@ class Infobot(callbacks.PluginRegexp):
     def doFactoid(self, irc, msg, match):
         r'^(.+?)\s+(?<!\\)(was|is|am|were|are)\s+(also\s+)?(.+?[?!. ]*)$'
         (key, isAre, also, value) = match.groups()
-        key = key.replace('\\', '')
+        key = key.replace('\\', '').rstrip('?')
         isAre = isAre.lower()
         value = value.rstrip().rstrip('?')
         if isAre in ('was', 'is', 'am'):

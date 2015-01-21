@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2005,2011, James Vega
+# Copyright (c) 2004-2005,2011,2015 James McCoy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -183,5 +183,9 @@ class InfobotTestCase(ChannelPluginTestCase):
         self.assertSnarfNoResponse('foo. is <reply>Key with punctuation')
         self.assertRegexp('foo.', r'Key with')
         self.assertNotRegexp('forget foo.', r'I didn\'t have anything')
+        # Factoid keys shouldn't end in a ? so they get stripped
+        self.assertSnarfNoResponse('bar? is <reply>Key with question')
+        self.assertRegexp('bar?', r'Key with')
+        self.assertNotRegexp('forget bar', r'I didn\'t have anything')
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
