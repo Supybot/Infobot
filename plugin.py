@@ -792,17 +792,18 @@ class Infobot(callbacks.PluginRegexp):
         if msg.addressed:
             self.confirm()
 
-    def listfacts(self, irc, msg, args, channel, glob):
+    def listkeys(self, irc, msg, args, channel, glob):
         """[<channel>] [<glob>]
 
-        Returns the facts in the Infobot database matching <glob>.
+        Returns the facts in the Infobot database with a key matching <glob>.
         """
         facts = self.db.getFacts(channel, glob)
         if not facts:
             self.dunno(irc=irc, msg=msg)
         else:
             irc.reply(utils.str.format('%L', list(facts)))
-    listfacts = wrap(listfacts, ['channeldb', additional('glob', '*')])
+    listkeys = wrap(listkeys, ['channeldb', additional('glob', '*')])
+    listfacts = listkeys
 
     def stats(self, irc, msg, args, channel):
         """[<channel>]

@@ -163,8 +163,8 @@ class InfobotTestCase(ChannelPluginTestCase):
         self.assertSnarfNoResponse('what?', 3)
         self.assertRegexp('roses?', 'roses are red')
 
-    def testListFacts(self):
-        self.assertRegexp('listfacts rose', 'roses')
+    def testListKeys(self):
+        self.assertRegexp('listkeys rose', 'roses')
 
     def testAddressedQuestions(self):
         self.assertSnarfNoResponse('hi is <reply>Hello, $who.')
