@@ -240,6 +240,15 @@ class PickleInfobotDB(object):
                       if fnmatch.fnmatch(f.lower(), glob)])
         return set(facts)
 
+    def getFactsByValue(self, channel, glob):
+        ((Is, Are), _) = self._getDb(channel)
+        glob = glob.lower()
+        facts = [k for (k, v) in Are.iteritems()
+                if fnmatch.fnmatch(f.lower(), glob)]
+        facts.extend([k for (k, v) in Is.iteritems()
+                      if fnmatch.fnmatch(v.lower(), glob)])
+        return set(facts)
+
 class SqliteInfobotDB(object):
     def __init__(self, filename):
         self.filename = filename
@@ -434,6 +443,14 @@ class SqliteInfobotDB(object):
         key = glob.translate(self._sqlTrans)
         sql = """SELECT key FROM {0} WHERE key LIKE %s ORDER BY key"""
         return set([f for f in self._forAllTables(channel, sql, getKey, key)])
+
+    def getFactsByValue(self, channel, glob):
+        def getKey(cursor):
+            for row in cursor.fetchall():
+                yield row[0]
+        value = glob.translate(self._sqlTrans)
+        sql = """SELECT key FROM {0} WHERE value LIKE %s ORDER BY key"""
+        return set([f for f in self._forAllTables(channel, sql, getKey, value)])
 
 
 InfobotDB = plugins.DB('Infobot',
@@ -811,6 +828,18 @@ class Infobot(callbacks.PluginRegexp):
             irc.reply(utils.str.format('%L', list(facts)))
     listkeys = wrap(listkeys, ['channeldb', additional('glob', '*')])
     listfacts = listkeys
+
+    def listvalues(self, irc, msg, args, channel, glob):
+        """[<channel>] [<glob>]
+
+        Returns the facts in the Infobot database with a value matching <glob>.
+        """
+        facts = self.db.getFactsByValue(channel, glob)
+        if facts:
+            irc.reply(utils.str.format('%L', list(facts)))
+        else:
+            self.dunno(irc=irc, msg=msg)
+    listvalues = wrap(listvalues, ['channeldb', additional('glob', '*')])
 
     def stats(self, irc, msg, args, channel):
         """[<channel>]
