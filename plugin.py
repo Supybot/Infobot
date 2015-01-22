@@ -408,25 +408,32 @@ class SqliteInfobotDB(object):
         except KeyError:
             return 0
 
-    def getNumFacts(self, channel):
+    def _forAllTables(self, channel, sql, resultFn, *args):
         (db, _) = self._getDb(channel)
         cursor = db.cursor()
-        cursor.execute("""SELECT COUNT(*) FROM areFacts""")
-        areFacts = int(cursor.fetchone()[0])
-        cursor.execute("""SELECT COUNT(*) FROM isFacts""")
-        isFacts = int(cursor.fetchone()[0])
-        return areFacts + isFacts
+        s = sql.format('areFacts')
+        cursor.execute(s, *args)
+        for v in resultFn(cursor):
+            yield v
+        s = sql.format('isFacts')
+        cursor.execute(s, *args)
+        for v in resultFn(cursor):
+            yield v
+
+    def getNumFacts(self, channel):
+        def count(cursor):
+            yield int(cursor.fetchone()[0])
+        sql = """SELECT COUNT(*) FROM {0}"""
+        return sum([c for c in self._forAllTables(channel, sql, count)])
 
     _sqlTrans = string.maketrans('*?', '%_')
     def getFacts(self, channel, glob):
-        (db, _) = self._getDb(channel)
-        cursor = db.cursor()
+        def getKey(cursor):
+            for row in cursor.fetchall():
+                yield row[0]
         key = glob.translate(self._sqlTrans)
-        cursor.execute("""SELECT key FROM areFacts WHERE key LIKE %s""", key)
-        facts = [fact[0] for fact in cursor.fetchall()]
-        cursor.execute("""SELECT key FROM isFacts WHERE key LIKE %s""", key)
-        facts.extend([fact[0] for fact in cursor.fetchall()])
-        return set(facts)
+        sql = """SELECT key FROM {0} WHERE key LIKE %s ORDER BY key"""
+        return set([f for f in self._forAllTables(channel, sql, getKey, key)])
 
 
 InfobotDB = plugins.DB('Infobot',
