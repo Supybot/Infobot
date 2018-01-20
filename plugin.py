@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2005,2009,2011,2015 James McCoy
+# Copyright (c) 2004-2018 James McCoy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,10 @@ import string
 import fnmatch
 import re
 import time
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import supybot.dbi as dbi
 import supybot.utils as utils
@@ -105,7 +108,7 @@ class PickleInfobotDB(object):
                 self.dbs[filename] = (Is, Are)
                 self.changes[filename] = 0
                 self.responses[filename] = 0
-            except cPickle.UnpicklingError, e:
+            except pickle.UnpicklingError, e:
                 fd.close()
                 raise dbi.InvalidDBError, str(e)
             fd.close()
