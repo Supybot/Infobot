@@ -90,6 +90,12 @@ initialAre = {'who': NORESPONSE,
               'violets': 'blue',
              }
 
+def items(d):
+    try:
+        return d.iteritems()
+    except AttributeError:
+        return d.items()
+
 class PickleInfobotDB(object):
     def __init__(self, filename):
         self.filename = filename
@@ -115,15 +121,15 @@ class PickleInfobotDB(object):
                                   utils.InsensitivePreservingDict())
             self.changes[filename] = 0
             self.responses[filename] = 0
-            for (k, v) in initialIs.iteritems():
+            for (k, v) in items(initialIs):
                 self.setIs(channel, k, v)
-            for (k, v) in initialAre.iteritems():
+            for (k, v) in items(initialAre):
                 self.setAre(channel, k, v)
         return (self.dbs[filename], filename)
 
     def flush(self, db=None, filename=None):
         if db is None and filename is None:
-            for (filename, db) in self.dbs.iteritems():
+            for (filename, db) in items(self.dbs):
                 fd = utils.file.AtomicFile(filename, 'wb')
                 pickle.dump(db, fd, -1)
                 fd.close()
@@ -244,9 +250,9 @@ class PickleInfobotDB(object):
     def getFactsByValue(self, channel, glob):
         ((Is, Are), _) = self._getDb(channel)
         glob = glob.lower()
-        facts = [k for (k, v) in Are.iteritems()
+        facts = [k for (k, v) in items(Are)
                 if fnmatch.fnmatch(f.lower(), glob)]
-        facts.extend([k for (k, v) in Is.iteritems()
+        facts.extend([k for (k, v) in items(Is)
                       if fnmatch.fnmatch(v.lower(), glob)])
         return set(facts)
 
@@ -289,16 +295,16 @@ class SqliteInfobotDB(object):
             db.commit()
             self.changes[filename] = 0
             self.responses[filename] = 0
-            for (k, v) in initialIs.iteritems():
+            for (k, v) in items(initialIs):
                 self.setIs(channel, k, v)
-            for (k, v) in initialAre.iteritems():
+            for (k, v) in items(initialAre):
                 self.setAre(channel, k, v)
             return (db, filename)
         except sqlite.DatabaseError as e:
             raise dbi.InvalidDBError(str(e))
 
     def close(self):
-        for db in self.dbs.itervalues():
+        for (_, db) in items(self.dbs):
             db.close()
         self.dbs.clear()
 
