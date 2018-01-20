@@ -28,7 +28,6 @@
 ###
 
 import os
-import string
 import fnmatch
 import re
 import time
@@ -442,7 +441,11 @@ class SqliteInfobotDB(object):
         sql = """SELECT COUNT(*) FROM {0}"""
         return sum([c for c in self._forAllTables(channel, sql, count)])
 
-    _sqlTrans = string.maketrans('*?', '%_')
+    try:
+        _sqlTrans = str.maketrans('*?', '%_')
+    except AttributeError:
+        import string
+        _sqlTrans = string.maketrans('*?', '%_')
     def getFacts(self, channel, glob):
         def getKey(cursor):
             for row in cursor.fetchall():
