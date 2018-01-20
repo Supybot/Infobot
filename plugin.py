@@ -108,9 +108,9 @@ class PickleInfobotDB(object):
                 self.dbs[filename] = (Is, Are)
                 self.changes[filename] = 0
                 self.responses[filename] = 0
-            except pickle.UnpicklingError, e:
+            except pickle.UnpicklingError as e:
                 fd.close()
-                raise dbi.InvalidDBError, str(e)
+                raise dbi.InvalidDBError(str(e))
             fd.close()
         else:
             self.dbs[filename] = (utils.InsensitivePreservingDict(),
@@ -263,9 +263,9 @@ class SqliteInfobotDB(object):
         try:
             import sqlite
         except ImportError:
-            raise callbacks.Error, 'You need to have PySQLite installed to '\
-                                   'use this plugin.  Download it at '\
-                                   '<http://pysqlite.org/>'
+            raise callbacks.Error('You need to have PySQLite installed to '
+                                  'use this plugin.  Download it at '
+                                  '<http://pysqlite.org/>')
         try:
             filename = plugins.makeChannelFilename(self.filename, channel)
             if filename not in self.changes:
@@ -296,8 +296,8 @@ class SqliteInfobotDB(object):
             for (k, v) in initialAre.iteritems():
                 self.setAre(channel, k, v)
             return (db, filename)
-        except sqlite.DatabaseError, e:
-            raise dbi.InvalidDBError, str(e)
+        except sqlite.DatabaseError as e:
+            raise dbi.InvalidDBError(str(e))
 
     def close(self):
         for db in self.dbs.itervalues():
@@ -567,7 +567,7 @@ class Infobot(callbacks.PluginRegexp):
             else:
                 self.log.debug('Returning early: Got a bad isAre value.')
                 return
-        except dbi.InvalidDBError, e:
+        except dbi.InvalidDBError as e:
             self.error('Unable to access db: %s' % e)
             return
         if isAre is None:
@@ -716,7 +716,7 @@ class Infobot(callbacks.PluginRegexp):
         changed = False
         try:
             r = utils.str.perlReToReplacer(regexp)
-        except ValueError, e:
+        except ValueError:
             if msg.addressed:
                 irc.errorInvalid('regexp', regexp)
             else:
