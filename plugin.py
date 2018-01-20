@@ -102,16 +102,14 @@ class PickleInfobotDB(object):
         if filename in self.dbs:
             pass
         elif os.path.exists(filename):
-            fd = file(filename)
-            try:
-                (Is, Are) = pickle.load(fd)
-                self.dbs[filename] = (Is, Are)
-                self.changes[filename] = 0
-                self.responses[filename] = 0
-            except pickle.UnpicklingError as e:
-                fd.close()
-                raise dbi.InvalidDBError(str(e))
-            fd.close()
+            with open(filename) as fd:
+                try:
+                    (Is, Are) = pickle.load(fd)
+                    self.dbs[filename] = (Is, Are)
+                    self.changes[filename] = 0
+                    self.responses[filename] = 0
+                except pickle.UnpicklingError as e:
+                    raise dbi.InvalidDBError(str(e))
         else:
             self.dbs[filename] = (utils.InsensitivePreservingDict(),
                                   utils.InsensitivePreservingDict())
@@ -907,7 +905,7 @@ class Infobot(callbacks.PluginRegexp):
             fd = utils.web.getUrlFd(url)
         except utils.web.Error:
             try:
-                fd = file(url)
+                fd = open(url)
             except EnvironmentError:
                 irc.errorInvalid('url or file')
         for line in fd:
