@@ -249,9 +249,9 @@ class PickleInfobotDB(object):
     def getFactsByValue(self, channel, glob):
         ((Is, Are), _) = self._getDb(channel)
         glob = glob.lower()
-        facts = [k for (k, v) in Are.iteritems()
+        facts = [k for (k, v) in items(Are)
                 if fnmatch.fnmatch(f.lower(), glob)]
-        facts.extend([k for (k, v) in Is.iteritems()
+        facts.extend([k for (k, v) in items(Is)
                       if fnmatch.fnmatch(v.lower(), glob)])
         return set(facts)
 
@@ -303,7 +303,7 @@ class SqliteInfobotDB(object):
             raise dbi.InvalidDBError(str(e))
 
     def close(self):
-        for db in self.dbs.itervalues():
+        for (_, db) in items(self.dbs):
             db.close()
         self.dbs.clear()
 
