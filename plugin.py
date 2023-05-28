@@ -250,7 +250,7 @@ class PickleInfobotDB(object):
         ((Is, Are), _) = self._getDb(channel)
         glob = glob.lower()
         facts = [k for (k, v) in items(Are)
-                if fnmatch.fnmatch(f.lower(), glob)]
+                if fnmatch.fnmatch(v.lower(), glob)]
         facts.extend([k for (k, v) in items(Is)
                       if fnmatch.fnmatch(v.lower(), glob)])
         return set(facts)
