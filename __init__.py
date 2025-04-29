@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2018, James McCoy
+# Copyright (c) 2004-2025, James McCoy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,10 @@
 Infobot compatibility, for the parts that we don't support already.
 """
 
-import imp
+try:
+    import importlib
+except ImportError:
+    import imp as importlib
 import supybot
 import supybot.world as world
 
@@ -50,7 +53,7 @@ __url__ = '' # 'http://supybot.com/Members/yourname/Infobot/download'
 
 from . import config
 from . import plugin
-imp.reload(plugin) # In case we're being reloaded.
+importlib.reload(plugin) # In case we're being reloaded.
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 
