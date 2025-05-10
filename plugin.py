@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2004-2018,2023 James McCoy
+# Copyright (c) 2004-2025 James McCoy
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -250,7 +250,7 @@ class PickleInfobotDB(object):
         ((Is, Are), _) = self._getDb(channel)
         glob = glob.lower()
         facts = [k for (k, v) in items(Are)
-                if fnmatch.fnmatch(v.lower(), glob)]
+                 if fnmatch.fnmatch(v.lower(), glob)]
         facts.extend([k for (k, v) in items(Is)
                       if fnmatch.fnmatch(v.lower(), glob)])
         return set(facts)
@@ -450,6 +450,7 @@ class Sqlite3InfobotDB(object):
     except AttributeError:
         import string
         _sqlTrans = string.maketrans('*?', '%_')
+
     def getFacts(self, channel, glob):
         def getKey(cursor):
             for row in cursor.fetchall():
@@ -480,6 +481,7 @@ class Infobot(callbacks.PluginRegexp):
     addressedRegexps = ['doForce', 'doForget', 'doChange', 'doFactoid',
                         'doUnknown']
     unaddressedRegexps = ['doFactoid', 'doUnknown']
+
     def __init__(self, irc):
         self.__parent = super(Infobot, self)
         self.__parent.__init__(irc)
@@ -591,7 +593,7 @@ class Infobot(callbacks.PluginRegexp):
                     raise Dunno
         else:
             value = utils.iter.choice(self._alternation.split(value))
-            value = value.replace('\|', '|')
+            value = value.replace(r'\|', '|')
             lvalue = value.lower()
             if lvalue.startswith('<reply>'):
                 value = value[7:].strip()
@@ -612,7 +614,7 @@ class Infobot(callbacks.PluginRegexp):
     _your = (re.compile(r'^your ', re.I), '%s\'s ')
     def normalize(self, s, bot, nick):
         s = ircutils.stripFormatting(s)
-        s = s.strip() # After stripFormatting for formatted spaces.
+        s = s.strip()  # After stripFormatting for formatted spaces.
         s = utils.str.normalizeWhitespace(s)
         s = self._iAm[0].sub(self._iAm[1] % nick, s)
         s = self._my[0].sub(self._my[1] % nick, s)
@@ -867,7 +869,6 @@ class Infobot(callbacks.PluginRegexp):
         changes = self.db.getChangeCount(channel)
         responses = self.db.getResponseCount(channel)
         now = time.time()
-        diff = int(now - world.startedAt)
         mode = {True: 'optional', False: 'require'}
         answer = self.registryValue('unaddressed.answerQuestions')
         irc.reply(format('Since %s, there %h been %n and %n. I have been awake'
@@ -927,7 +928,7 @@ class Infobot(callbacks.PluginRegexp):
             line = line.rstrip('\r\n')
             try:
                 (key, value) = line.split(' => ', 1)
-            except ValueError: #unpack list of wrong size
+            except ValueError:  # unpack list of wrong size
                 self.log.debug('Invalid line: %r', line)
                 continue
             else:
